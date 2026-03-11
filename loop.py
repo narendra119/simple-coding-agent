@@ -29,14 +29,13 @@ def run_agent(user_prompt: str, messages: list) -> list:
     messages.append({"role": "user", "content": user_prompt})
 
     for _ in range(MAX_ITERATIONS):
-        response = llm.respond(messages, tools=TOOLS)
+        print("\nAgent: ", end="", flush=True)
+        response = llm.stream_respond(messages, tools=TOOLS)
+        print()  # newline after streamed text
 
         messages.append({"role": "assistant", "content": response.content})
 
         if response.stop_reason == "end_turn":
-            for block in response.content:
-                if hasattr(block, "text"):
-                    print(f"\nAgent: {block.text}")
             break
 
         if response.stop_reason == "tool_use":

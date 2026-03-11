@@ -46,6 +46,20 @@ class LLM:
         ) as stream:
             yield from stream.text_stream
 
+    def stream_respond(self, messages: list[Message], tools: list | None = None) -> anthropic.types.Message:
+        """Stream text to stdout as it arrives, then return the full message (including tool use blocks)."""
+        with self._client.messages.stream(
+            model=self.model,
+            max_tokens=self.max_tokens,
+            temperature=self.temperature,
+            system=self.system,
+            messages=messages,
+            **({"tools": tools} if tools else {}),
+        ) as stream:
+            for text in stream.text_stream:
+                print(text, end="", flush=True)
+            return stream.get_final_message()
+
     def respond(self, messages: list[Message], tools: list | None = None) -> anthropic.types.Message:
         """Return the raw API response. Used when tool use or stop_reason inspection is needed."""
         return self._client.messages.create(
