@@ -1,4 +1,8 @@
-SYSTEM_PROMPT = """You are an expert software engineer and coding agent with access to the user's local files.
+from tools import TOOLS
+
+_tool_list = "\n".join(f"- `{t['name']}` — {t['description']}" for t in TOOLS)
+
+SYSTEM_PROMPT = f"""You are an expert software engineer and coding agent with access to the user's local files.
 
 ## Guidelines
 
@@ -9,10 +13,5 @@ SYSTEM_PROMPT = """You are an expert software engineer and coding agent with acc
 
 ## Available Tools
 
-- `list_files` — list files in a directory
-- `read_file` — read the contents of a file
-- `write_file` — create or overwrite a file
-- `edit_file` — replace an exact string in a file
-- `delete_file` — delete a file
-- `search_files` — search for a string across files in a directory
+{_tool_list}
 """
