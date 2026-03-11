@@ -22,10 +22,13 @@ def confirm(block) -> bool:
     return answer == "y"
 
 
+MAX_ITERATIONS = 20
+
+
 def run_agent(user_prompt: str, messages: list) -> list:
     messages.append({"role": "user", "content": user_prompt})
 
-    while True:
+    for _ in range(MAX_ITERATIONS):
         response = llm.respond(messages, tools=TOOLS)
 
         messages.append({"role": "assistant", "content": response.content})
@@ -53,6 +56,8 @@ def run_agent(user_prompt: str, messages: list) -> list:
                 })
 
             messages.append({"role": "user", "content": tool_results})
+    else:
+        print(f"\n[agent stopped: reached max iterations ({MAX_ITERATIONS})]")
 
     return messages
 
