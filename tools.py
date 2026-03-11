@@ -1,3 +1,4 @@
+import glob as glob_module
 import os
 import subprocess
 
@@ -71,6 +72,18 @@ TOOLS = [
                 "timeout": {"type": "integer", "description": "Timeout in seconds (defaults to 30)"},
             },
             "required": ["command"],
+        },
+    },
+    {
+        "name": "glob_files",
+        "description": "Find files matching a glob pattern (e.g. '**/*.py', 'src/**/*.ts'). Returns matching file paths sorted by modification time.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "pattern": {"type": "string", "description": "Glob pattern to match files against"},
+                "directory": {"type": "string", "description": "Root directory to search from (defaults to '.')"},
+            },
+            "required": ["pattern"],
         },
     },
     {
@@ -154,6 +167,12 @@ def search_files(query, directory=".", extension=None):
     return results
 
 
+def glob_files(pattern: str, directory: str = ".") -> str:
+    matches = glob_module.glob(os.path.join(directory, pattern), recursive=True)
+    matches.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+    return "\n".join(matches) if matches else "(no matches)"
+
+
 def run_shell(command: str, cwd: str = ".", timeout: int = 30) -> str:
     result = subprocess.run(
         command,
@@ -180,6 +199,7 @@ def execute_tool(name: str, inputs: dict) -> str:
             case "write_file":  return write_file(**inputs)
             case "edit_file":   return edit_file(**inputs)
             case "delete_file": return delete_file(**inputs)
+            case "glob_files":    return glob_files(**inputs)
             case "run_shell":     return run_shell(**inputs)
             case "list_files":    return list_files(**inputs)
             case "search_files":  return str(search_files(**inputs))
