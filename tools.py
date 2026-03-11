@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 TOOLS = [
     {
@@ -57,6 +58,19 @@ TOOLS = [
                 "path": {"type": "string", "description": "Directory path (defaults to '.')"},
             },
             "required": [],
+        },
+    },
+    {
+        "name": "run_shell",
+        "description": "Run a shell command and return its stdout and stderr. Use for executing code, running tests, installing packages, git operations, etc.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "command": {"type": "string", "description": "The shell command to run"},
+                "cwd": {"type": "string", "description": "Working directory for the command (defaults to '.')"},
+                "timeout": {"type": "integer", "description": "Timeout in seconds (defaults to 30)"},
+            },
+            "required": ["command"],
         },
     },
     {
@@ -140,6 +154,25 @@ def search_files(query, directory=".", extension=None):
     return results
 
 
+def run_shell(command: str, cwd: str = ".", timeout: int = 30) -> str:
+    result = subprocess.run(
+        command,
+        shell=True,
+        cwd=cwd,
+        timeout=timeout,
+        text=True,
+        capture_output=True,
+    )
+    output = ""
+    if result.stdout:
+        output += result.stdout
+    if result.stderr:
+        output += result.stderr
+    if result.returncode != 0:
+        output += f"\n[exit code {result.returncode}]"
+    return output or "(no output)"
+
+
 def execute_tool(name: str, inputs: dict) -> str:
     try:
         match name:
@@ -147,6 +180,7 @@ def execute_tool(name: str, inputs: dict) -> str:
             case "write_file":  return write_file(**inputs)
             case "edit_file":   return edit_file(**inputs)
             case "delete_file": return delete_file(**inputs)
+            case "run_shell":     return run_shell(**inputs)
             case "list_files":    return list_files(**inputs)
             case "search_files":  return str(search_files(**inputs))
             case _:               return f"Unknown tool: {name}"

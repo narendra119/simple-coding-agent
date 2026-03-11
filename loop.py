@@ -10,7 +10,7 @@ load_dotenv()
 
 llm = LLM(system=SYSTEM_PROMPT)
 
-DESTRUCTIVE_TOOLS = {"write_file", "delete_file"}
+DESTRUCTIVE_TOOLS = {"write_file", "delete_file", "run_shell"}
 
 
 def confirm(block) -> bool:
