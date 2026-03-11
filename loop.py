@@ -10,6 +10,17 @@ load_dotenv()
 
 llm = LLM(system=SYSTEM_PROMPT)
 
+DESTRUCTIVE_TOOLS = {"write_file", "delete_file"}
+
+
+def confirm(block) -> bool:
+    """Prompt the user to confirm a destructive tool call. Returns True to proceed."""
+    try:
+        answer = input(f"  Allow {block.name}? [y/N] ").strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        answer = "n"
+    return answer == "y"
+
 
 def run_agent(user_prompt: str, messages: list) -> list:
     messages.append({"role": "user", "content": user_prompt})
@@ -31,7 +42,10 @@ def run_agent(user_prompt: str, messages: list) -> list:
                 if block.type != "tool_use":
                     continue
                 print(f"  [tool] {block.name}({json.dumps(block.input)})")
-                result = execute_tool(block.name, block.input)
+                if block.name in DESTRUCTIVE_TOOLS and not confirm(block):
+                    result = "User denied this action."
+                else:
+                    result = execute_tool(block.name, block.input)
                 tool_results.append({
                     "type": "tool_result",
                     "tool_use_id": block.id,
