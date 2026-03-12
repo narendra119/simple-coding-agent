@@ -6,11 +6,14 @@ from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
-COLLECTION   = "project_memory"
-VECTOR_SIZE  = 1536                                    # text-embedding-3-small default
-QDRANT_URL   = os.getenv("QDRANT_URL", "http://localhost:6333")
+COLLECTION    = "project_memory"
+VECTOR_SIZE   = 768                                     # nomic-embed-text output size
+QDRANT_URL    = os.getenv("QDRANT_URL", "http://localhost:6333")
+OLLAMA_URL    = os.getenv("OLLAMA_URL", "http://localhost:11434")
+EMBED_MODEL   = "nomic-embed-text"
 
-_openai = OpenAI()
+# Ollama exposes an OpenAI-compatible /v1 API — no extra dependency needed
+_ollama = OpenAI(base_url=f"{OLLAMA_URL}/v1", api_key="ollama")
 _qdrant = QdrantClient(url=QDRANT_URL)
 
 
@@ -24,7 +27,7 @@ def _ensure_collection() -> None:
 
 
 def _embed(text: str) -> list[float]:
-    res = _openai.embeddings.create(model="text-embedding-3-small", input=text)
+    res = _ollama.embeddings.create(model=EMBED_MODEL, input=text)
     return res.data[0].embedding
 
 
