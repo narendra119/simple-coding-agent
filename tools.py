@@ -1,6 +1,12 @@
+# Core Imports
 import glob as glob_module
 import os
 import subprocess
+
+# Third-Party Imports
+
+# Local Imports
+import memory as _memory
 
 TOOLS = [
     {
@@ -72,6 +78,27 @@ TOOLS = [
                 "timeout": {"type": "integer", "description": "Timeout in seconds (defaults to 30)"},
             },
             "required": ["command"],
+        },
+    },
+    {
+        "name": "update_memory",
+        "description": (
+            "Save important facts about the project to long-term vector memory. "
+            "Each fact is embedded and stored separately for semantic retrieval. "
+            "Call this when you learn something worth remembering across sessions — "
+            "e.g. tech stack, entry points, test commands, conventions, known issues. "
+            "Pass concise, self-contained facts as individual list items."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "facts": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of concise facts to remember, e.g. ['Uses pytest for testing', 'Entry point is main.py', 'Python 3.10+']",
+                },
+            },
+            "required": ["facts"],
         },
     },
     {
@@ -167,6 +194,11 @@ def search_files(query, directory=".", extension=None):
     return results
 
 
+def update_memory(facts: list[str]) -> str:
+    n = _memory.save(facts)
+    return f"Saved {n} fact(s) to vector memory."
+
+
 def glob_files(pattern: str, directory: str = ".") -> str:
     matches = glob_module.glob(os.path.join(directory, pattern), recursive=True)
     matches.sort(key=lambda p: os.path.getmtime(p), reverse=True)
@@ -199,6 +231,7 @@ def execute_tool(name: str, inputs: dict) -> str:
             case "write_file":  return write_file(**inputs)
             case "edit_file":   return edit_file(**inputs)
             case "delete_file": return delete_file(**inputs)
+            case "update_memory": return update_memory(**inputs)
             case "glob_files":    return glob_files(**inputs)
             case "run_shell":     return run_shell(**inputs)
             case "list_files":    return list_files(**inputs)

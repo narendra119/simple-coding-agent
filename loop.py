@@ -1,5 +1,6 @@
 import json
 
+import memory
 from dotenv import load_dotenv
 
 from llm import LLM
@@ -25,8 +26,20 @@ def confirm(block) -> bool:
 MAX_ITERATIONS = 20
 
 
+def _build_user_content(user_prompt: str) -> str:
+    """Prepend relevant memory facts (if any) to the user message."""
+    try:
+        facts = memory.search(user_prompt)
+    except Exception:
+        facts = []
+    if not facts:
+        return user_prompt
+    fact_block = "\n".join(f"- {f}" for f in facts)
+    return f"## Relevant project memory\n{fact_block}\n\n## Request\n{user_prompt}"
+
+
 def run_agent(user_prompt: str, messages: list) -> list:
-    messages.append({"role": "user", "content": user_prompt})
+    messages.append({"role": "user", "content": _build_user_content(user_prompt)})
 
     for _ in range(MAX_ITERATIONS):
         print("\nAgent: ", end="", flush=True)
